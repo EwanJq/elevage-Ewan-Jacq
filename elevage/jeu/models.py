@@ -4,6 +4,7 @@ class Game(models.Model):
     current_turn = models.IntegerField(default=1)
 
 class Rearing(models.Model):
+    name = models.CharField()
     money = models.FloatField()
     global_food = models.FloatField()
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
@@ -40,6 +41,20 @@ class Rabbit(models.Model):
     food = models.FloatField(default=0)
     price = models.FloatField(default=0)
     cage = models.ForeignKey(Cage, on_delete=models.CASCADE)
+    
+# on stockera dans cette classe les informations données par l'utilisateur
+
+class GameSetup(models.Model):
+    rearing_name = models.CharField(max_length=100)
+    initial_male_rabbits = models.IntegerField(default=0)
+    initial_female_rabbits = models.IntegerField(default=0)
+    initial_young_rabbits = models.IntegerField(default=0)
+    initial_baby_rabbits = models.IntegerField(default=0)
+    initial_food = models.FloatField(default=0)
+    initial_money = models.FloatField(default=0)
+
+    def __str__(self):
+        return self.name
     
     
 
