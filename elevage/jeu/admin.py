@@ -1,6 +1,8 @@
 from django.contrib import admin
 from .models import Game, Rearing, Cage, Rabbit
 
+#permet d'enregistrer les modèles et d'inetragire avec eux via la plateforme administration (demande d'id ?)
+
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
     list_display = ('id', 'current_turn')

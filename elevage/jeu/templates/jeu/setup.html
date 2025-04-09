@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initialisation de l'Élevage</title>
+</head>
+<body>
+    <h1>Initialisation de l'Élevage</h1>
+    
+    <form method="post">
+        {% csrf_token %} <!-- Token de sécurité : check si cela est necessaire -->
+        {{ form.as_p }}  <!-- Affiche le formulaire sous forme de paragraphes -->
+        <button type="submit">Commencer la partie</button>
+    </form>
+</body>
+</html>
