@@ -23,16 +23,17 @@ class Cage(models.Model):
 
 class Rabbit(models.Model):
     
-    class RabbitType(models.TextChoices):
-        BABY = 'baby'
-        YOUNG = 'young'
-        MALE = 'male'
-        FEMALE = 'female'
+    RABBIT_TYPE_CHOICES = [ #on est obligé d'utiliser des tuples : pour ce qui est utilisé en base de donnée et ce qui est affiché à l'utilisateur
+        ('baby', 'Lapereau'),
+        ('young', 'Jeune'),
+        ('male', 'Mâle'),
+        ('female', 'Femelle'),
+    ]
         
     type = models.CharField(
         max_length=10,
-        choices=RabbitType.choices,
-        default=RabbitType.BABY,
+        choices=RABBIT_TYPE_CHOICES,
+        default='baby',
     )
     
     age = models.IntegerField(default=0)
