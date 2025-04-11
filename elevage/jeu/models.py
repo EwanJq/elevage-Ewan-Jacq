@@ -57,6 +57,20 @@ class GameSetup(models.Model):
 
     def __str__(self):
         return self.name
+
+class GameDashboard(models.Model):
+    setup = models.ForeignKey(GameSetup, on_delete=models.CASCADE)
+
+    food_purchased = models.FloatField(default=0)
+    cages_purchased = models.IntegerField(default=0)
+
+    rabbits_sold_male = models.IntegerField(default=0)
+    rabbits_sold_female = models.IntegerField(default=0)
+    rabbits_sold_young = models.IntegerField(default=0)
+    rabbits_sold_baby = models.IntegerField(default=0)
+    turn_number = models.IntegerField(default=1)
+    
+    
     
     
 
