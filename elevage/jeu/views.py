@@ -1,6 +1,8 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import *
 from .models import *
+from django.contrib import messages  # Ajoutez cette ligne
+from jeu.services import game_logic
 
 def game_setup(request):
     if request.method == 'GET':
@@ -9,43 +11,38 @@ def game_setup(request):
         form = GameSetupForm(request.POST)
         if form.is_valid():
             form.save()  # Sauvegarde les données dans la base de données
-            return redirect('jeu:game_dashboard') # Redirige vers la page du jeu une fois l'initialisation terminée
+            game = Game.objects.create(current_turn=1)
+            
+            # Création de l'élevage avec les données du formulaire
+            rearing = Rearing.objects.create(
+                rearing_name=form.cleaned_data['rearing_name'],
+                game=game,
+                money=form.cleaned_data['initial_money'],
+                global_food=form.cleaned_data['initial_food'],
+                current_money=form.cleaned_data['initial_money'],
+                current_food=form.cleaned_data['initial_food']
+            )
+            
+            return redirect('jeu:rearing_dashboard', rearing_name=rearing.rearing_name) # Redirige vers la page du jeu une fois l'initialisation terminée
     else:
         form = GameSetupForm()
 
     return render(request, 'jeu/setup.html', {'form': form})
 
-    
-def game_dashboard(request):
-    
-    setup = GameSetup.objects.last() #On récupere le dernier elevage crééer (A CHANGER)
-    if not setup:
-        return redirect('jeu:game_setup')
 
-    if request.method == 'GET':
-        dashboard_form = GameDashboardForm()
-    if request.method == 'POST':
-        dashboard_form = GameDashboardForm(request.POST)
-        if dashboard_form.is_valid():
-            
-            # On traitera le tour 
-            
-            return redirect('jeu:game_dashboard') # On renvoie sur le jeu
+
+def rearing_dashboard(request, rearing_name):
+    rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
+    return render(request, 'jeu/dashboard.html', {'rearing': rearing})
+
+def next_turn(request, rearing_name):
+    rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
+    
+    success = game_logic.process_turn(request, rearing_name)  
+    
+    if success:
+        rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
+        return redirect('jeu:rearing_dashboard', rearing_name=rearing.rearing_name)
     else:
-        dashboard_form = GameDashboardForm()
-
-    # Préparer les données à envoyer dans le contexte
-    context = {
-        'form': dashboard_form,
-        'resources': {
-            'argent': setup.initial_money,
-            'nourriture': setup.initial_food,
-            'mâles': setup.initial_male_rabbits,
-            'femelles': setup.initial_female_rabbits,
-            'jeunes': setup.initial_young_rabbits,
-            'bébés': setup.initial_baby_rabbits,
-        }
-    }
-
-    # Renvoyer le template avec le contexte
-    return render(request, 'jeu/dashboard.html', context)
+        # Gérer l'erreur si nécessaire
+        return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)

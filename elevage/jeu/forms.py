@@ -73,61 +73,11 @@ class GameSetupForm(forms.ModelForm):
         return initial_money
     
 
-class GameDashboardForm(forms.ModelForm):
-    class Meta:
-        model = GameDashboard
-        fields = [
-            'food_purchased',
-            'cages_purchased',
-            'rabbits_sold_male',
-            'rabbits_sold_female',
-            'rabbits_sold_young',
-            'rabbits_sold_baby',
-        ]
-        
-        labels = { #On change les noms anglais pour donner une interface plus comprehensible à l'utilisateur
-        'food_purchased' : "Achat en nourriture",
-        'cages_purchased' : "Achat de cages",
-        'rabbits_sold_male' : "Vente de lapins males",
-        'rabbits_sold_female' : "Vente de lapins femelle",
-        'rabbits_sold_young' : "Vente de jeunes lapins",
-        'rabbits_sold_baby' : "Vente de bébés lapins",
-    }
-
-        widgets = {
-            'food_purchased': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Quantité de nourriture à acheter (kg)',
-                'min': 0
-            }),
-            'cages_purchased': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Nombre de cages à acheter',
-                'min': 0
-            }),
-            'rabbits_sold_male': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Lapins mâles à vendre',
-                'min': 0
-            }),
-            'rabbits_sold_female': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Lapins femelles à vendre',
-                'min': 0
-            }),
-            'rabbits_sold_young': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Lapereaux à vendre',
-                'min': 0
-            }),
-            'rabbits_sold_baby': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Bébés lapins à vendre',
-                'min': 0
-            }),
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        # Tu peux ajouter ici des validations croisées si besoin
-        return cleaned_data
+class RearingSearchForm(forms.Form):
+    rearing_name = forms.CharField(
+        label="Nom de votre élevage",
+        max_length=20,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Entrez le nom exact de votre élevage'
+        })
+    )

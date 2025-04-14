@@ -5,14 +5,14 @@ class Game(models.Model):
     current_turn = models.IntegerField(default=1)
 
 class Rearing(models.Model):
-    rearing_name = models.CharField(max_length=20)
+    
+    rearing_name = models.CharField(max_length=20, unique=True)  # Ajoutez unique=True
     money = models.FloatField()
     global_food = models.FloatField()
     game = models.ForeignKey(Game, on_delete=models.CASCADE)  #sers à renvoyer à un utilisateur
     current_money = models.FloatField(default=0)
     current_food = models.FloatField(default=0)
     
-    @property
     def total_rabbits(self):
         return Rabbit.objects.filter(cage__rearing=self).count()
 
@@ -63,17 +63,7 @@ class Rabbit(models.Model):
         if self.age >= 3 and self.type in ['baby', 'young']:  # gestion de la croissance du lapin
             self.type = 'female' if random.random() > 0.5 else 'male'
         self.save()
-        
-    def can_reproduce(self):
-        return (self.type == 'female' 
-                and not self.is_pregnant           # verifie que la femelle n'est pas deja enceinte
-                and self.age >= 6                  # verifie que la femelle a plus de 6mois       
-                and (self.last_birth is None or    # verifie que la femelle n'a pas eu de petits le mois dernier ou n'a jamais eu de petitq
-                     self.age - self.last_birth >= 1))
     
-    
-    
-
     
 # Classes communiquant avec le joueur
 # on stockera dans cette classe les informations données par l'utilisateur
@@ -89,18 +79,6 @@ class GameSetup(models.Model):
 
     def __str__(self):
         return self.name
-
-class GameDashboard(models.Model):
-    setup = models.ForeignKey(GameSetup, on_delete=models.CASCADE)
-
-    food_purchased = models.FloatField(default=0)
-    cages_purchased = models.IntegerField(default=0)
-    rabbits_sold_male = models.IntegerField(default=0)
-    rabbits_sold_female = models.IntegerField(default=0)
-    rabbits_sold_young = models.IntegerField(default=0)
-    rabbits_sold_baby = models.IntegerField(default=0)
-    turn_number = models.IntegerField(default=1)
-    
     
     
     

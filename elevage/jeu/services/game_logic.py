@@ -4,17 +4,20 @@ from jeu import models
 from jeu.models import Rearing, Rabbit, Cage
 import random
 
-def next_turn(request):
+def process_turn(request, rearing_name):
     # Récuperation de l'elevage, vieillissement et application des règles de vie et de mort dans l'elevage
-    rearing = Rearing.objects.first()  
-    
+    try:
+        rearing = Rearing.objects.get(rearing_name=rearing_name)
+    except Rearing.DoesNotExist:
+        return False, "Élevage non trouvé"
     
     # 0 -- Gestion des ages des lapins
     
     
-    Rabbit.objects.filter(cage__rearing=rearing).update(age=models.F('age') + 1)
+    rabbits = Rabbit.objects.filter(cage__rearing=rearing).select_related('cage')
+    for rabbit in rabbits :
+        rabbit.update_age()
     # cage__rearing=rearing permet de filtrer sur toutes cages appartenant à rearing
-    # models.F('age') permet d'acceder au champ age de la base de donnée
     
     
     # 1 -- Gestion des naissances
@@ -51,13 +54,13 @@ def next_turn(request):
         cage=female.cage,
         type='male',
         age__gte=6 
-    ).exists()
+        ).exists()
 
-    if male_in_same_cage and random.random() < 0.3:     # Besoin d'un facteur chance pour ne pas surpeupler les cages trop facilement
-        female.is_pregnant = True
-        female.pregnancy_start = rearing.game.current_turn
-        female.pregnancy_duration = 1                   # Gestation de 1 mois
-        female.save()
+        if male_in_same_cage and random.random() < 0.3:     # Besoin d'un facteur chance pour ne pas surpeupler les cages trop facilement
+            female.is_pregnant = True
+            female.pregnancy_start = rearing.game.current_turn
+            female.pregnancy_duration = 1                   # Gestation de 1 mois
+            female.save()
         
     # 3 -- Gestion de l'entretien alimentaire des lapins
     
@@ -135,5 +138,3 @@ def next_turn(request):
     rearing.game.current_turn += 1
     rearing.game.save()
     
-    messages.success(request, f"Mois {rearing.game.current_turn} terminé !")
-    return redirect('dashboard')

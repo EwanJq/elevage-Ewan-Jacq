@@ -1,18 +1,25 @@
+<h1>{{ rearing.rearing_name }}</h1>
+<p>Mois actuel: {{ rearing.game.current_turn }}</p>
 
+<!-- Affichage des messages -->
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
 
-<div class="container mt-4">
-    <div class="card bg-light p-3 shadow-sm mb-4">
-      <h5 class="card-title text-center mb-3">🐰 État de votre élevage</h5>
-      <div class="row text-center">
-        <div class="col">💰 Argent : {{ resources.argent }} €</div>
-        <div class="col">🥕 Nourriture : {{ resources.nourriture }} kg</div>
-        <div class="col">🏠 Cages : {{ resources.cages }}</div>
-      </div>
-      <div class="row text-center mt-2">
-        <div class="col">👶 Bébés : {{ resources.bébés }}</div>
-        <div class="col">🐇 Jeunes : {{ resources.jeunes }}</div>
-        <div class="col">♂️ Mâles : {{ resources.mâles }}</div>
-        <div class="col">♀️ Femelles : {{ resources.femelles }}</div>
-      </div>
-    </div>
-  </div>
+<!-- Formulaire passage au tour suivant -->
+<form method="post" action="{% url 'jeu:next_turn' rearing_name=rearing.rearing_name %}">
+    {% csrf_token %}
+    <button type="submit">Passer au mois suivant</button>
+</form>
+
+<!-- Affichage des stats -->
+<div>
+    <h2>Ressources</h2>
+    <p>Argent: {{ rearing.current_money }}€</p>
+    <p>Nourriture: {{ rearing.current_food }}kg</p>
+    <p>Total lapins: {{ rearing.total_rabbits }}</p>
+</div>
