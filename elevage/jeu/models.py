@@ -29,42 +29,6 @@ class Cage(models.Model):
 
     def is_full(self):
         return self.rabbit_count() >= 6
-
-
-class Rabbit(models.Model):
-    RABBIT_TYPE_CHOICES = [
-        ('baby', 'Lapereau (<2 mois)'),
-        ('young', 'Jeune (2-6 mois)'),
-        ('male', 'Mâle (>6 mois)'),
-        ('female', 'Femelle (>6 mois)'),
-    ]
-    
-    type = models.CharField(max_length=10, choices=RABBIT_TYPE_CHOICES, default='baby')
-    age = models.IntegerField(default=0)  # en mois
-    is_pregnant = models.BooleanField(default=False)
-    pregnancy_start = models.IntegerField(null=True, blank=True)  # mois de début de gestation
-    last_birth = models.IntegerField(null=True, blank=True)  # dernier mois d'accouchement
-    cage = models.ForeignKey('Cage', on_delete=models.CASCADE)
-    
-    @property
-    def can_reproduce(self):
-        """Une femelle peut se reproduire si :
-        - Elle est adulte (>6 mois)
-        - Non gestante
-        - Au moins 1 mois depuis le dernier accouchement
-        """
-        return (self.type == 'female' 
-                and not self.is_pregnant
-                and (self.last_birth is None or 
-                     self.age - self.last_birth >= 1))
-    
-    def update_age(self):
-        """Mise à jour mensuelle"""
-        self.age += 1
-        # Mise à jour du type si nécessaire
-        if self.age >= 6 and self.type in ['baby', 'young']:
-            self.type = 'female' if random.random() > 0.5 else 'male'
-        self.save()
         
         
 class Rabbit(models.Model):
@@ -85,12 +49,11 @@ class Rabbit(models.Model):
     age = models.IntegerField(default=0)  # en mois
     cage = models.ForeignKey('Cage', on_delete=models.CASCADE)
     hunger = models.IntegerField(default=0)  # 0-100 scale
-    
+    infection = models.IntegerField(default=0)  # 0-100 scale
     is_pregnant = models.BooleanField(default=False)
     pregnancy_start = models.IntegerField(null=True, blank=True)  # mois de début de gestation
     pregnancy_duration = models.IntegerField(default=1)
     last_birth = models.IntegerField(null=True, blank=True)  # dernier mois d'accouchement
-    is_sick = models.BooleanField(default = False)
     
     
     def update_age(self):

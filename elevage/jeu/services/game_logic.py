@@ -59,8 +59,77 @@ def next_turn(request):
         female.pregnancy_duration = 1                   # Gestation de 1 mois
         female.save()
         
+    # 3 -- Gestion de l'entretien alimentaire des lapins
     
-    # 3 -- Passage du mois
+    
+    FOOD_CONSUMPTION = {  # consommation en kg/mois
+    'baby': 0,    
+    'young': 3,   
+    'male': 7.5,    
+    'female': 7.5   
+    }
+        
+    rabbits = Rabbit.objects.filter(cage__rearing=rearing).select_related('cage')
+    # Permet de prendre tous les lapins en compte
+    
+    for rabbit in rabbits:
+        consumption = FOOD_CONSUMPTION[rabbit.type]
+        if rearing.current_food >= 0 :
+            rearing.current_food -= consumption
+            rabbit.hunger = max(0, rabbit.hunger - 15)          # Cap à 0
+        else :
+            rabbit.hunger = min(100, rabbit.hunger + 40)        # Cap à 100
+            rabbit.save()
+    
+    # 4 -- Gestion de l'espace disponible des cages (infections + morts)
+    
+    
+    for cage in rearing.cages.all():
+        rabbit_count = cage.rabbit_set.count()
+        
+        if rabbit_count <= 6:
+            rabbit.infection = max(0, rabbit.infection - 15)  # Cap à 100
+            rabbit.save()
+    
+        if rabbit_count > 6:
+            infected_rabbits = cage.rabbit_set.order_by('?')[:max(1, rabbit_count - 6)]
+            for rabbit in infected_rabbits:
+                rabbit.infection = min(100, rabbit.infection + 40)  # Cap à 100
+                rabbit.save()
+            
+        if rabbit_count > 10:
+            excess = rabbit_count - 10
+        
+        survie = 0.5
+        rabbits_to_kill = cage.rabbit_set.order_by('?')[:max(1, round(excess * survie))]     # On laisse à quelques lapins une chance de survie, mais en en tuant au moins 1
+        victims = cage.rabbit_set.order_by('?')[:rabbits_to_kill]                            # ordre aleatoire avec ?
+        victims.delete()
+        
+        # Option : Log pour le joueur
+        print(f"{rabbits_to_kill} lapins morts de surpopulation dans la cage {cage.id}")
+        
+    
+    # 5 -- Gestion des lapins infectés ou affamés
+    
+    
+    for rabbit in Rabbit.objects.filter(cage__rearing=rearing):
+
+        if rabbit.hunger > 50:
+            if random.random() < rabbit.hunger / 200:  # 25% max de chance de mourir
+                rabbit.delete()
+                continue
+        
+        # Lapins infectés (infection > 50%)
+        if rabbit.infection > 50:
+            if random.random() < rabbit.infection / 200:  # 25% max de chance de mourir
+                rabbit.delete()
+                continue
+        
+        # Sauvegarde si le lapin survit
+        rabbit.save()
+
+    
+    # 6 -- Passage du mois
     
     
     rearing.game.current_turn += 1
