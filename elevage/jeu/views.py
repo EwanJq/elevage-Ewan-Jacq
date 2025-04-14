@@ -4,8 +4,8 @@ from .models import *
 
 def game_setup(request):
     if request.method == 'GET':
-        form = GameSetupForm()
-    elif request.method == 'POST': #recupere les infos données par l'utilisateur
+        form = GameSetupForm()                  #envoie les infos de la base de donnée à l'utilisateur
+    elif request.method == 'POST':              #recupere les infos données par l'utilisateur
         form = GameSetupForm(request.POST)
         if form.is_valid():
             form.save()  # Sauvegarde les données dans la base de données
@@ -15,16 +15,24 @@ def game_setup(request):
 
     return render(request, 'jeu/setup.html', {'form': form})
 
+    
 def game_dashboard(request):
-    # Récupérer le premier objet GameSetup, ou un spécifique si nécessaire
-    setup = GameSetup.objects.first()  # ou GameSetup.objects.get(id=1) si tu sais quel objet tu veux
-
-    # Si aucun GameSetup n'est trouvé, rediriger vers la page de setup
+    
+    setup = GameSetup.objects.last() #On récupere le dernier elevage crééer (A CHANGER)
     if not setup:
         return redirect('jeu:game_setup')
 
-    # Créer une instance du formulaire de dashboard
-    dashboard_form = GameDashboardForm()
+    if request.method == 'GET':
+        dashboard_form = GameDashboardForm()
+    if request.method == 'POST':
+        dashboard_form = GameDashboardForm(request.POST)
+        if dashboard_form.is_valid():
+            
+            # On traitera le tour 
+            
+            return redirect('jeu:game_dashboard') # On renvoie sur le jeu
+    else:
+        dashboard_form = GameDashboardForm()
 
     # Préparer les données à envoyer dans le contexte
     context = {

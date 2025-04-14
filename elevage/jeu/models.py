@@ -1,27 +1,72 @@
+import random
 from django.db import models
 
 class Game(models.Model):
     current_turn = models.IntegerField(default=1)
 
 class Rearing(models.Model):
-    name = models.CharField(max_length=20)
+    rearing_name = models.CharField(max_length=20)
     money = models.FloatField()
     global_food = models.FloatField()
-    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)  #sers à renvoyer à un utilisateur
+    current_money = models.FloatField(default=0)
+    current_food = models.FloatField(default=0)
+    
+    @property
+    def total_rabbits(self):
+        return Rabbit.objects.filter(cage__rearing=self).count()
 
 class Cage(models.Model):
-    cost = models.FloatField()
-    rearing = models.ForeignKey(Rearing, on_delete=models.CASCADE)
+    cost = models.FloatField(default=100.0)  # cout par défaut de la cage
+    rearing = models.ForeignKey(Rearing, on_delete=models.CASCADE, related_name='cages')
     
-    def rabbit_count(self):
+    def rabbit_count(self): #compte les lapins dans la cage
         return self.rabbit_set.count()
 
-    def is_overcrowded(self):
+    # définition des methodes clarifiant l'état de propagation des maladies dans la cage
+    def is_overcrowded(self): 
         return self.rabbit_count() > 10
 
     def is_full(self):
         return self.rabbit_count() >= 6
 
+
+class Rabbit(models.Model):
+    RABBIT_TYPE_CHOICES = [
+        ('baby', 'Lapereau (<2 mois)'),
+        ('young', 'Jeune (2-6 mois)'),
+        ('male', 'Mâle (>6 mois)'),
+        ('female', 'Femelle (>6 mois)'),
+    ]
+    
+    type = models.CharField(max_length=10, choices=RABBIT_TYPE_CHOICES, default='baby')
+    age = models.IntegerField(default=0)  # en mois
+    is_pregnant = models.BooleanField(default=False)
+    pregnancy_start = models.IntegerField(null=True, blank=True)  # mois de début de gestation
+    last_birth = models.IntegerField(null=True, blank=True)  # dernier mois d'accouchement
+    cage = models.ForeignKey('Cage', on_delete=models.CASCADE)
+    
+    @property
+    def can_reproduce(self):
+        """Une femelle peut se reproduire si :
+        - Elle est adulte (>6 mois)
+        - Non gestante
+        - Au moins 1 mois depuis le dernier accouchement
+        """
+        return (self.type == 'female' 
+                and not self.is_pregnant
+                and (self.last_birth is None or 
+                     self.age - self.last_birth >= 1))
+    
+    def update_age(self):
+        """Mise à jour mensuelle"""
+        self.age += 1
+        # Mise à jour du type si nécessaire
+        if self.age >= 6 and self.type in ['baby', 'young']:
+            self.type = 'female' if random.random() > 0.5 else 'male'
+        self.save()
+        
+        
 class Rabbit(models.Model):
     
     RABBIT_TYPE_CHOICES = [ #on est obligé d'utiliser des tuples : pour ce qui est utilisé en base de donnée et ce qui est affiché à l'utilisateur
@@ -37,13 +82,37 @@ class Rabbit(models.Model):
         default='baby',
     )
     
-    age = models.IntegerField(default=0)
-    food = models.FloatField(default=0)
-    price = models.FloatField(default=0)
-    cage = models.ForeignKey(Cage, on_delete=models.CASCADE)
+    age = models.IntegerField(default=0)  # en mois
+    cage = models.ForeignKey('Cage', on_delete=models.CASCADE)
+    hunger = models.IntegerField(default=0)  # 0-100 scale
+    
+    is_pregnant = models.BooleanField(default=False)
+    pregnancy_start = models.IntegerField(null=True, blank=True)  # mois de début de gestation
+    pregnancy_duration = models.IntegerField(default=1)
+    last_birth = models.IntegerField(null=True, blank=True)  # dernier mois d'accouchement
+    is_sick = models.BooleanField(default = False)
+    
+    
+    def update_age(self):
+        """Mise à jour mensuelle"""
+        self.age += 1
+        # Mise à jour du type si nécessaire
+        if self.age >= 3 and self.type in ['baby', 'young']:  # gestion de la croissance du lapin
+            self.type = 'female' if random.random() > 0.5 else 'male'
+        self.save()
+        
+    def can_reproduce(self):
+        return (self.type == 'female' 
+                and not self.is_pregnant           # verifie que la femelle n'est pas deja enceinte
+                and self.age >= 6                  # verifie que la femelle a plus de 6mois       
+                and (self.last_birth is None or    # verifie que la femelle n'a pas eu de petits le mois dernier ou n'a jamais eu de petitq
+                     self.age - self.last_birth >= 1))
     
     
     
+
+    
+# Classes communiquant avec le joueur
 # on stockera dans cette classe les informations données par l'utilisateur
 
 class GameSetup(models.Model):
@@ -63,7 +132,6 @@ class GameDashboard(models.Model):
 
     food_purchased = models.FloatField(default=0)
     cages_purchased = models.IntegerField(default=0)
-
     rabbits_sold_male = models.IntegerField(default=0)
     rabbits_sold_female = models.IntegerField(default=0)
     rabbits_sold_young = models.IntegerField(default=0)
