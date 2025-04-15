@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>{{ rearing.rearing_name }} - Dashboard</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
         .action-form {
             border: 1px solid #ddd;
             padding: 15px;
@@ -24,8 +28,43 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin: 20px 0;
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .cages-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding-bottom: 10px;
+        }
+        .cage-card {
+            flex: 0 0 auto;
+            min-width: 200px;
+            background-color: #f9f9f9;
+            border-left: 5px solid #2196F3;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .cage-lapins {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ccc;
+        }
+        .lapin {
+            margin-bottom: 5px;
+        }
+        .lapin:hover {
+            text-decoration: underline;
         }
     </style>
+    <script>
+        function toggleLapins(cageId) {
+            const lapinsDiv = document.getElementById('lapins-' + cageId);
+            lapinsDiv.style.display = (lapinsDiv.style.display === "none") ? "block" : "none";
+        }
+    </script>
 </head>
 <body>
 
@@ -41,14 +80,15 @@
     </ul>
     {% endif %}
 
+    <!-- Affichage des ressources -->
     <div class="resources">
-        <div><strong>Argent:</strong> {{ rearing.current_money }}€</div>
-        <div><strong>Nourriture:</strong> {{ rearing.current_food }}kg</div>
-        <div><strong>Lapins:</strong> {{ rearing.total_rabbits }}</div>
-        <div><strong>Cages:</strong> {{ rearing.cages.count }}</div>
+        <div><strong>Argent:</strong> {{ rearing.current_money }} €</div>
+        <div><strong>Nourriture:</strong> {{ rearing.current_food }} kg</div>
+        <div><strong>Total de lapins:</strong> {{ rearing.total_rabbits }}</div>
+        <div><strong>Nombre de cages:</strong> {{ rearing.total_cages }}</div>
     </div>
 
-    <!-- Formulaire d'achat d'item -->
+    <!-- Formulaire d'achat d'objets -->
     <form method="post" class="action-form">
         {% csrf_token %}
         <h2>Achat d'objets</h2>
@@ -65,11 +105,42 @@
         <button type="submit" class="btn">Acheter</button>
     </form>
 
-    <!-- Formulaire de passage au mois suivant -->
+    <!-- Cages avec lapins (affichage horizontal) -->
+    <h2>Cages</h2>
+    <div class="cages-container">
+        {% for cage in rearing.cages.all %}
+            <div class="cage-card">
+                <strong>Cage #{{ forloop.counter }}</strong><br>
+                <button type="button" onclick="toggleLapins({{ forloop.counter }})" class="btn" style="margin-top: 10px;">Voir les lapins</button>
+                
+                <div class="cage-lapins" id="lapins-{{ forloop.counter }}">
+                    {% with rabbits=cage.rabbit_set.all %}
+                        {% if rabbits %}
+                            <ul>
+                                {% for rabbit in rabbits %}
+                                    <li class="lapin" 
+                                        title="Faim: {{ rabbit.hunger }}%, Infection: {{ rabbit.infection }}%">
+                                        {{ rabbit.type }} - {{ rabbit.age }} mois
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>Aucun lapin.</p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </div>
+        {% empty %}
+            <p>Aucune cage disponible.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Passage au mois suivant -->
     <form method="post" action="{% url 'jeu:next_turn' rearing_name=rearing.rearing_name %}" class="action-form">
         {% csrf_token %}
         <h2>Actions pour le prochain mois</h2>
         <button type="submit" class="btn">Passer au mois suivant</button>
     </form>
+
 </body>
 </html>
