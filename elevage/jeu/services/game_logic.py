@@ -1,22 +1,27 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from jeu import models
 from jeu.models import Rearing, Rabbit, Cage
 import random
+from django.db import transaction
+from django.db import models
+
 
 def process_turn(request, rearing_name):
+    
+    
     # Récuperation de l'elevage, vieillissement et application des règles de vie et de mort dans l'elevage
     try:
         rearing = Rearing.objects.get(rearing_name=rearing_name)
     except Rearing.DoesNotExist:
         return False, "Élevage non trouvé"
     
+    
     # 0 -- Gestion des ages des lapins
     
     
     rabbits = Rabbit.objects.filter(cage__rearing=rearing).select_related('cage')
     for rabbit in rabbits :
-        rabbit.update_age()
+        rabbit.update_age()         #methode de la classe lapin permettant de les faire vieillir et changer de stade de vie
     # cage__rearing=rearing permet de filtrer sur toutes cages appartenant à rearing
     
     
@@ -59,8 +64,8 @@ def process_turn(request, rearing_name):
         if male_in_same_cage and random.random() < 0.3:     # Besoin d'un facteur chance pour ne pas surpeupler les cages trop facilement
             female.is_pregnant = True
             female.pregnancy_start = rearing.game.current_turn
-            female.pregnancy_duration = 1                   # Gestation de 1 mois
             female.save()
+            
         
     # 3 -- Gestion de l'entretien alimentaire des lapins
     
@@ -138,3 +143,78 @@ def process_turn(request, rearing_name):
     rearing.game.current_turn += 1
     rearing.game.save()
     
+
+# Fonctions d'interactions entre l'utilisateur et la base de donnée
+    
+    
+# Prix et constantes
+PRICES = {
+        'food': 1.2,  
+        'cage': 70,    
+        'baby': 10,
+        'young': 15,
+        'male': 20,
+        'female': 25
+}
+
+def buy_item(rearing_name, item_type, quantity):
+
+    rearing = Rearing.objects.get(rearing_name=rearing_name)
+    unit_price = PRICES[item_type]
+    total_cost = unit_price * quantity
+
+    if item_type == 'food':
+        rearing.current_food += quantity
+        rearing.current_money -= total_cost
+        rearing.save()
+        
+    elif item_type == 'cage':
+        while quantity > 0 :
+            Cage.objects.create(rearing=rearing)
+            quantity -= 1
+        rearing.current_money -= total_cost
+        rearing.save()
+        
+    elif item_type in ['baby', 'young', 'male', 'female']:
+        
+        counter = quantity
+        
+        available_cages = rearing.cages.annotate(
+            rabbit_count=models.Count('rabbit')
+        ).filter(rabbit_count__lt=10).order_by('rabbit_count') 
+        
+        if available_cages == 0 :
+            raise ValueError("Vous devez acheter une cage avant d’acheter des lapins.")
+        
+        for cage in available_cages:
+            if cage.rabbit_set.count() <= 10 and  counter > 0:
+
+                Rabbit.objects.create(
+                    type=item_type,
+                    age={'baby': 0, 'young': 1, 'male': 3, 'female': 3}[item_type],
+                    cage=cage,
+                    hunger=0,
+                    infection=0
+                    )
+                counter -= 1
+            else :
+                None
+
+        while counter > 0 :
+            Rabbit.objects.create(
+                type=item_type,
+                age={'baby': 0, 'young': 1, 'male': 3, 'female': 3}[item_type],
+                cage=rearing.cages.first(),
+                hunger=0,
+                infection=0
+                )
+            counter -= 1
+                
+        rearing.current_money -= total_cost
+        rearing.save()
+                
+            
+
+        
+    
+

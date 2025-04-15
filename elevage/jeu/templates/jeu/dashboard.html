@@ -1,25 +1,75 @@
-<h1>{{ rearing.rearing_name }}</h1>
-<p>Mois actuel: {{ rearing.game.current_turn }}</p>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ rearing.rearing_name }} - Dashboard</title>
+    <style>
+        .action-form {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .form-group { margin-bottom: 10px; }
+        .btn { 
+            padding: 10px 15px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .resources {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
 
-<!-- Affichage des messages -->
-{% if messages %}
-<ul class="messages">
-    {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-    {% endfor %}
-</ul>
-{% endif %}
+    <h1>{{ rearing.rearing_name }} - Mois {{ rearing.game.current_turn }}</h1>
 
-<!-- Formulaire passage au tour suivant -->
-<form method="post" action="{% url 'jeu:next_turn' rearing_name=rearing.rearing_name %}">
-    {% csrf_token %}
-    <button type="submit">Passer au mois suivant</button>
-</form>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li style="color:{% if message.tags == 'error' %}red{% else %}green{% endif %}">
+            {{ message }}
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
 
-<!-- Affichage des stats -->
-<div>
-    <h2>Ressources</h2>
-    <p>Argent: {{ rearing.current_money }}€</p>
-    <p>Nourriture: {{ rearing.current_food }}kg</p>
-    <p>Total lapins: {{ rearing.total_rabbits }}</p>
-</div>
+    <div class="resources">
+        <div><strong>Argent:</strong> {{ rearing.current_money }}€</div>
+        <div><strong>Nourriture:</strong> {{ rearing.current_food }}kg</div>
+        <div><strong>Lapins:</strong> {{ rearing.total_rabbits }}</div>
+        <div><strong>Cages:</strong> {{ rearing.cages.count }}</div>
+    </div>
+
+    <!-- Formulaire d'achat d'item -->
+    <form method="post" class="action-form">
+        {% csrf_token %}
+        <h2>Achat d'objets</h2>
+
+        <div class="form-group">
+            {{ form.item_type.label_tag }}<br>
+            {{ form.item_type }}
+        </div>
+        <div class="form-group">
+            {{ form.quantity.label_tag }}<br>
+            {{ form.quantity }}
+        </div>
+        
+        <button type="submit" class="btn">Acheter</button>
+    </form>
+
+    <!-- Formulaire de passage au mois suivant -->
+    <form method="post" action="{% url 'jeu:next_turn' rearing_name=rearing.rearing_name %}" class="action-form">
+        {% csrf_token %}
+        <h2>Actions pour le prochain mois</h2>
+        <button type="submit" class="btn">Passer au mois suivant</button>
+    </form>
+</body>
+</html>

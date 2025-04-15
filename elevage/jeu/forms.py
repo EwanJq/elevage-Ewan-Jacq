@@ -72,12 +72,19 @@ class GameSetupForm(forms.ModelForm):
             raise forms.ValidationError("L'argent initial ne peut pas être négatif.")
         return initial_money
     
+    
 
-class RearingSearchForm(forms.Form):
-    rearing_name = forms.CharField(
-        label="Nom de votre élevage",
-        max_length=20,
-        widget=forms.TextInput(attrs={
-            'placeholder': 'Entrez le nom exact de votre élevage'
-        })
-    )
+class BuyItemForm(forms.Form):
+    ITEM_CHOICES = [
+        ('food', 'Nourriture'),
+        ('cage', 'Cage'),
+        ('baby', 'Bébé lapin'),
+        ('young', 'Jeune lapin'),
+        ('male', 'Mâle adulte'),
+        ('female', 'Femelle adulte'),
+    ]
+
+    item_type = forms.ChoiceField(choices=ITEM_CHOICES, label="Type d'objet")
+    quantity = forms.IntegerField(min_value=1, label="Quantité")
+    
+

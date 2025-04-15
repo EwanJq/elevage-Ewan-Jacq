@@ -15,21 +15,13 @@ class Rearing(models.Model):
     
     def total_rabbits(self):
         return Rabbit.objects.filter(cage__rearing=self).count()
+    
+    def total_cages(self):
+        return Cage.objects.filter(rearing=self).count()
 
 class Cage(models.Model):
     cost = models.FloatField(default=100.0)  # cout par défaut de la cage
-    rearing = models.ForeignKey(Rearing, on_delete=models.CASCADE, related_name='cages')
-    
-    def rabbit_count(self): #compte les lapins dans la cage
-        return self.rabbit_set.count()
-
-    # définition des methodes clarifiant l'état de propagation des maladies dans la cage
-    def is_overcrowded(self): 
-        return self.rabbit_count() > 10
-
-    def is_full(self):
-        return self.rabbit_count() >= 6
-        
+    rearing = models.ForeignKey(Rearing, on_delete=models.CASCADE, related_name='cages')    
         
 class Rabbit(models.Model):
     
@@ -52,8 +44,6 @@ class Rabbit(models.Model):
     infection = models.IntegerField(default=0)  # 0-100 scale
     is_pregnant = models.BooleanField(default=False)
     pregnancy_start = models.IntegerField(null=True, blank=True)  # mois de début de gestation
-    pregnancy_duration = models.IntegerField(default=1)
-    last_birth = models.IntegerField(null=True, blank=True)  # dernier mois d'accouchement
     
     
     def update_age(self):
@@ -63,6 +53,7 @@ class Rabbit(models.Model):
         if self.age >= 3 and self.type in ['baby', 'young']:  # gestion de la croissance du lapin
             self.type = 'female' if random.random() > 0.5 else 'male'
         self.save()
+
     
     
 # Classes communiquant avec le joueur
