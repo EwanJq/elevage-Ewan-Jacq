@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import *
 from .models import *
-from jeu.services.game_logic import buy_item, process_turn
+from jeu.services.game_logic import buy_item, process_turn, sell_item
 
 
 # 0 -- Vue de Setup : lors de la creation de son premier élevage
@@ -29,38 +29,44 @@ def game_setup(request):
 
     return render(request, 'jeu/setup.html', {'form': form})
 
-# 1 -- Création du next turn effect, permettant de passer un mois dans le jeu
-
-
-def next_turn(request, rearing_name):
-    rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
-    
-    success = process_turn(request, rearing_name)                # On applique la methode du process turn pour appliquer les effets du mois à tous les objets
-    
-    if success:
-        rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
-        return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)
-    else:
-        # Gérer l'erreur si nécessaire
-        return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)
-
-
-# 2 -- Dashboard du jeu : Menu principal en jeu
 
 
 def rearing_dashboard(request, rearing_name):
     rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
-    
+
+    # Initialisation des formulaires
+    buy_form = BuyItemForm()
+    sell_form = SellItemForm()
+
     if request.method == 'GET':
-        form = BuyItemForm()  
+        # Envoie les formulaires vides à l'utilisateur
+        return render(request, 'jeu/dashboard.html', {
+            'rearing': rearing,
+            'buy_form': buy_form,
+            'sell_form': sell_form,
+        })
+
     elif request.method == 'POST':
-        form = BuyItemForm(request.POST)
-        if form.is_valid():
-            item_type = form.cleaned_data['item_type']
-            quantity = form.cleaned_data['quantity']
-            buy_item(rearing_name, item_type, quantity)
-            return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)
+        # Récupère le type de formulaire soumis
+        form_type = request.POST.get('form_type')
 
-    return render(request, 'jeu/dashboard.html', {'form': form, 'rearing': rearing})
+        if form_type == 'buy':
+            buy_form = BuyItemForm(request.POST)
+            if buy_form.is_valid():
+                item_type = buy_form.cleaned_data['item_type']
+                quantity = buy_form.cleaned_data['quantity']
+                buy_item(rearing_name, item_type, quantity)
 
+        elif form_type == 'sell':
+            sell_form = SellItemForm(request.POST)
+            if sell_form.is_valid():
+                item_type = sell_form.cleaned_data['item_type']
+                quantity = sell_form.cleaned_data['quantity']
+                sell_item(rearing_name, item_type, quantity)
+
+        elif form_type == 'next_turn':
+            process_turn(request, rearing_name)
+
+        # Redirection après traitement POST pour éviter une double soumission
+        return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)
 

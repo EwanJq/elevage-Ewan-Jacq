@@ -47,11 +47,12 @@ class Rabbit(models.Model):
     
     
     def update_age(self):
-        """Mise à jour mensuelle"""
         self.age += 1
         # Mise à jour du type si nécessaire
-        if self.age >= 3 and self.type in ['baby', 'young']:  # gestion de la croissance du lapin
+        if self.age >= 2 and self.type in ['baby','young']:  # gestion de la croissance du lapin
             self.type = 'female' if random.random() > 0.5 else 'male'
+        if self.age == 1 and self.type in ['baby']: 
+            self.type = 'young'
         self.save()
 
     

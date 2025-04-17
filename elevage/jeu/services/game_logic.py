@@ -152,7 +152,7 @@ def process_turn(request, rearing_name):
     
     
 # Prix et constantes
-PRICES = {
+PRICES_BUY = {
         'food': 1.2,  
         'cage': 70,    
         'baby': 10,
@@ -160,11 +160,16 @@ PRICES = {
         'male': 20,
         'female': 25
 }
+PRICES_SELL = {
+        'cage': 30,    
+        'male': 15,
+        'female': 20
+}
 
 def buy_item(rearing_name, item_type, quantity):
 
     rearing = Rearing.objects.get(rearing_name=rearing_name)
-    unit_price = PRICES[item_type]
+    unit_price = PRICES_BUY[item_type]
     total_cost = unit_price * quantity
 
     if item_type == 'food':
@@ -217,6 +222,45 @@ def buy_item(rearing_name, item_type, quantity):
         rearing.current_money -= total_cost
         rearing.save()
                 
+# A l'instar de buy_items qui marche très bien
+def sell_item(rearing_name, item_type, quantity):
+    rearing = Rearing.objects.get(rearing_name=rearing_name)
+    unit_price = PRICES_SELL[item_type]
+    total_gain = unit_price * quantity 
+
+    if item_type == 'food':
+        if rearing.current_food < quantity:
+            raise ValueError("Pas assez de nourriture à vendre.")
+        rearing.current_food -= quantity
+        rearing.current_money += total_gain
+        rearing.save()
+
+    elif item_type == 'cage':
+        # On récupère uniquement les cages vides
+        empty_cages = rearing.cages.annotate(
+            rabbit_count=models.Count('rabbit')
+        ).filter(rabbit_count=0)[:quantity]
+
+        if empty_cages.count() < quantity:
+            raise ValueError("Impossible de vendre une cage contenant des lapins.")
+
+        for cage in empty_cages:
+            cage.delete()
+
+        rearing.current_money += total_gain
+        rearing.save()
+
+    elif item_type in ['male', 'female']:
+        rabbits = list(Rabbit.objects.filter(cage__rearing=rearing, type=item_type).order_by('age')[:quantity])
+        
+        if len(rabbits) < quantity:
+            raise ValueError(f"Pas assez de lapins de type {item_type} à vendre.")
+        
+        for rabbit in rabbits:
+            rabbit.delete()
+        
+        rearing.current_money += total_gain
+        rearing.save()
             
 
         

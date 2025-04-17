@@ -75,7 +75,7 @@ class GameSetupForm(forms.ModelForm):
     
 
 class BuyItemForm(forms.Form):
-    ITEM_CHOICES = [
+    ITEM_CHOICES_BUY = [
         ('food', 'Nourriture'),
         ('cage', 'Cage'),
         ('baby', 'Bébé lapin'),
@@ -84,7 +84,17 @@ class BuyItemForm(forms.Form):
         ('female', 'Femelle adulte'),
     ]
 
-    item_type = forms.ChoiceField(choices=ITEM_CHOICES, label="Type d'objet")
+    item_type = forms.ChoiceField(choices=ITEM_CHOICES_BUY, label="Type d'objet à acheter")
+    quantity = forms.IntegerField(min_value=1, label="Quantité")
+    
+class SellItemForm(forms.Form):
+    ITEM_CHOICES_SELL = [
+        ('cage', 'Cage'),
+        ('male', 'Mâle adulte'),
+        ('female', 'Femelle adulte'),
+    ]
+    
+    item_type = forms.ChoiceField(choices=ITEM_CHOICES_SELL, label="Type d'objet à vendre")
     quantity = forms.IntegerField(min_value=1, label="Quantité")
     
 
