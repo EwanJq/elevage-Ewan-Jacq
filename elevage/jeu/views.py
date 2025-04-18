@@ -33,6 +33,15 @@ def game_setup(request):
 
 def rearing_dashboard(request, rearing_name):
     rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
+    month = (rearing.game.current_turn - 1) % 12
+    if month in [2, 3, 4]:
+        background = 'printemps.png'
+    elif month in [5, 6, 7]:
+        background = 'ete.png'
+    elif month in [8, 9, 10]:
+        background = 'automne.png'
+    else:
+        background = 'hiver.png'
 
     # Initialisation des formulaires
     buy_form = BuyItemForm()
@@ -44,10 +53,11 @@ def rearing_dashboard(request, rearing_name):
             'rearing': rearing,
             'buy_form': buy_form,
             'sell_form': sell_form,
+            'background_image': f"jeu/images/{background}"
         })
 
     elif request.method == 'POST':
-        # Récupère le type de formulaire soumis
+        # Récupère le type de formulaire
         form_type = request.POST.get('form_type')
 
         if form_type == 'buy':
