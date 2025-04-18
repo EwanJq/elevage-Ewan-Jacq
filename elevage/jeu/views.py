@@ -93,4 +93,11 @@ def all_rearings(request):
         'rearings': rearings,
         'search_term': search_term
     })
+    
+def main_menu(request):
+    background_image = 'jeu/images/lapin2.png' if random.random() < 0.05 else 'jeu/images/lapin1.png'
+    return render(request, 'jeu/main_menu.html', {'background_image': background_image})
+
+
+
 
