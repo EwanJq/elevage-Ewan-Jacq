@@ -4,46 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Tous les élevages</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        .search-bar {
-            margin-bottom: 20px;
-        }
-        .search-bar input {
-            padding: 10px;
-            font-size: 16px;
-            width: 300px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        .rearing-list {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .rearing-card {
-            background-color: #f9f9f9;
-            border-radius: 8px;
-            border-left: 5px solid #2196F3;
-            padding: 15px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .rearing-card h3 {
-            margin-top: 0;
-        }
-        .rearing-card a {
-            color: #2196F3;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .rearing-card a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
 </head>
 <body>
     <h1>Tous les élevages</h1>

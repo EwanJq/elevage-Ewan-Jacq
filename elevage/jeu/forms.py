@@ -14,7 +14,7 @@ class GameSetupForm(forms.ModelForm):
             'initial_money'
         ]
         
-        labels = { #On change les noms anglais pour donner une interface plus comprehensible à l'utilisateur
+        labels = {      #On change les noms anglais pour donner une interface plus comprehensible à l'utilisateur
         'rearing_name': "Nom de l'élevage",
         'initial_young_rabbits': "Nombre de jeunes lapins",
         'initial_baby_rabbits': "Nombre de bébés lapins",
@@ -24,7 +24,7 @@ class GameSetupForm(forms.ModelForm):
         'initial_money': "Argent initial (€)",
     }
 
-        widgets = {
+        widgets = {     #Boutons réellements utiles à l'utilisateur
             'rearing_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': "Nom de l'élevage"}),
             'initial_young_rabbits': forms.NumberInput(attrs={'class': 'form-control'}),
             'initial_baby_rabbits': forms.NumberInput(attrs={'class': 'form-control'}),

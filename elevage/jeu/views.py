@@ -3,7 +3,6 @@ from .forms import *
 from .models import *
 from jeu.services.game_logic import buy_item, process_turn, sell_item
 
-
 # 0 -- Vue de Setup : lors de la creation de son premier élevage
 
 def game_setup(request):
@@ -15,12 +14,10 @@ def game_setup(request):
             form.save()  # Sauvegarde les données dans la base de données
             game = Game.objects.create(current_turn=1)
             
-            # Création de l'élevage avec les données du formulaire
+            # Création de l'élevage avec les données du formulaire (On applique les données initiales à celui d'un elevage)
             rearing = Rearing.objects.create(
                 rearing_name=form.cleaned_data['rearing_name'],
                 game=game,
-                money=form.cleaned_data['initial_money'],
-                global_food=form.cleaned_data['initial_food'],
                 current_money=form.cleaned_data['initial_money'],
                 current_food=form.cleaned_data['initial_food']
             )
@@ -29,16 +26,18 @@ def game_setup(request):
 
     return render(request, 'jeu/setup.html', {'form': form})
 
-
+# 1 -- Vue principale du jeu
 
 def rearing_dashboard(request, rearing_name):
-    rearing = get_object_or_404(Rearing, rearing_name=rearing_name)
+    # Récuperation de l'elevage
+    rearing = get_object_or_404(Rearing, rearing_name=rearing_name) 
+    #Affichage du fond d'ecran selon le mois
     month = (rearing.game.current_turn - 1) % 12
-    if month in [2, 3, 4]:
+    if month in [1, 2, 3]:
         background = 'printemps.png'
-    elif month in [5, 6, 7]:
+    elif month in [4, 5, 6]:
         background = 'ete.png'
-    elif month in [8, 9, 10]:
+    elif month in [7, 8, 9]:
         background = 'automne.png'
     else:
         background = 'hiver.png'
@@ -57,7 +56,7 @@ def rearing_dashboard(request, rearing_name):
         })
 
     elif request.method == 'POST':
-        # Récupère le type de formulaire
+        # Récuperation du formulaire
         form_type = request.POST.get('form_type')
 
         if form_type == 'buy':
@@ -80,6 +79,8 @@ def rearing_dashboard(request, rearing_name):
         # Redirection après traitement POST pour éviter une double soumission
         return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)
     
+# 2 -- Vue de tous les élevages
+    
 def all_rearings(request):
     # Récupère tous les élevages
     rearings = Rearing.objects.all()
@@ -94,6 +95,8 @@ def all_rearings(request):
         'search_term': search_term
     })
     
+# 3 -- Menu du jeu
+
 def main_menu(request):
     background_image = 'jeu/images/lapin2.png' if random.random() < 0.05 else 'jeu/images/lapin1.png'
     return render(request, 'jeu/main_menu.html', {'background_image': background_image})

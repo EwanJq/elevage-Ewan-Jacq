@@ -4,90 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>{{ rearing.rearing_name }} - Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        .action-form {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 5px;
-            background-size: cover;
-            background-position: center;
-            color: white; /* Pour garantir que le texte reste lisible */
-            backdrop-filter: blur(5px); /* Optionnel pour flouter l'arrière-plan */
-        }
-        .form-group { margin-bottom: 10px; }
-        .btn { 
-            padding: 10px 15px;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-        }
-        .btn-buy {
-            background-color: rgba(255, 255, 255, 0.7); /* Pour rendre les boutons plus visibles */
-        }
-        .btn-sell {
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-        .btn-next-turn {
-            background-color: rgba(255, 255, 255, 0.7);
-        }
+    <link rel="stylesheet" href="{% static 'css/global.css' %}">
 
-        .btn:hover {
-            transform: scale(1.05);
-        }
-
-        .resources {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-            background-color: rgba(240, 240, 240, 0.8);
-            padding: 15px;
-            border-radius: 8px;
-        }
-        .cages-container {
-            display: flex;
-            overflow-x: auto;
-            gap: 10px;
-            padding-bottom: 10px;
-        }
-        .cage-card {
-            flex: 0 0 auto;
-            min-width: 150px;
-            background-color: rgba(255, 255, 255, 0.8);
-            background-image: url('{% static "jeu/images/textures/cage_texture.png" %}');
-            background-size: cover;
-            border-left: 5px solid #2196F3;
-            padding: 10px;
-            border-radius: 6px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-        }
-        .cage-card h3 {
-            background-color: rgba(255, 255, 255, 0.7);
-            padding: 5px;
-            border-radius: 4px;
-        }
-        .cage-lapins {
-            display: none;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #ccc;
-        }
-        .lapin {
-            margin-bottom: 5px;
-        }
-        .lapin:hover {
-            text-decoration: underline;
-        }
-    </style>
     <script>
         function toggleLapins(cageId) {
             const lapinsDiv = document.getElementById('lapins-' + cageId);
@@ -97,6 +15,8 @@
 </head>
 
 <body style="background-image: url('{% static background_image %}'); background-size: cover; background-repeat: no-repeat; background-attachment: fixed;">
+    
+    <h1 class="dashboard-title">{{ rearing.rearing_name }}</h1>
 
     <!-- Affichage des ressources -->
     <div class="resources">

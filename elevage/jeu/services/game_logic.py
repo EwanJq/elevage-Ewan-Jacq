@@ -1,8 +1,6 @@
 from django.shortcuts import render, redirect
-from django.contrib import messages
 from jeu.models import Rearing, Rabbit, Cage
 import random
-from django.db import transaction
 from django.db import models
 
 
@@ -97,7 +95,7 @@ def process_turn(request, rearing_name):
     
     
     for cage in rearing.cages.all():
-        rabbit_count = cage.rabbit_set.count()
+        rabbit_count = cage.rabbit_set.exclude(type='baby').count()
     
         if rabbit_count <= 6:
             for rabbit in cage.rabbit_set.all():
@@ -125,15 +123,16 @@ def process_turn(request, rearing_name):
     
     
     for rabbit in Rabbit.objects.filter(cage__rearing=rearing):
-
-        if rabbit.hunger > 50:
-            if random.random() < rabbit.hunger / 200:  # 25% max de chance de mourir
+        
+        #Regle d'assassinat DIRECT s'il n'a pas mangé
+        if rabbit.hunger > 40:
+            if random.random() < rabbit.hunger / 100:  # Plus on est elevé plus on a de chances dde mourir
                 rabbit.delete()
                 continue
         
         # Lapins infectés (infection > 50%)
         if rabbit.infection > 50:
-            if random.random() < rabbit.infection / 200:  # 25% max de chance de mourir
+            if random.random() < rabbit.infection / 100:  
                 rabbit.delete()
                 continue
         
@@ -154,7 +153,7 @@ def process_turn(request, rearing_name):
 # Prix et constantes
 PRICES_BUY = {
         'food': 1.2,  
-        'cage': 70,    
+        'cage': 100,    
         'baby': 10,
         'young': 15,
         'male': 20,
