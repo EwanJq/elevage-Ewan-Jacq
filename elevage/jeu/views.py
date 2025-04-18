@@ -79,4 +79,18 @@ def rearing_dashboard(request, rearing_name):
 
         # Redirection après traitement POST pour éviter une double soumission
         return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)
+    
+def all_rearings(request):
+    # Récupère tous les élevages
+    rearings = Rearing.objects.all()
+    
+    # Recherche d'élevage si un terme est passé dans les paramètres GET
+    search_term = request.GET.get('search', '')
+    if search_term:
+        rearings = rearings.filter(rearing_name__icontains=search_term)
+
+    return render(request, 'jeu/all_rearings.html', {
+        'rearings': rearings,
+        'search_term': search_term
+    })
 
