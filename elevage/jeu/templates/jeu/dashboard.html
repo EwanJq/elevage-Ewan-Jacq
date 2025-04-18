@@ -15,7 +15,7 @@
 </head>
 
 <body style="background-image: url('{% static background_image %}'); background-size: cover; background-repeat: no-repeat; background-attachment: fixed;">
-    
+
     <h1 class="dashboard-title">{{ rearing.rearing_name }}</h1>
 
     <!-- Affichage des ressources -->
@@ -24,6 +24,19 @@
         <div><strong>Nourriture:</strong> {{ rearing.current_food }} kg</div>
         <div><strong>Total de lapins:</strong> {{ rearing.total_rabbits }}</div>
         <div><strong>Nombre de cages:</strong> {{ rearing.total_cages }}</div>
+    </div>
+    <div style="display: flex; justify-content: center; margin-top: 30px;">
+        <a href="{% url 'jeu:main_menu' %}" class="btn" style="
+            padding: 10px 20px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            text-align: center;
+        ">
+            Retour au menu principal
+        </a>
     </div>
 
     <!-- Formulaires d'achat et de vente côte à côte -->
@@ -64,8 +77,10 @@
     </div>
 
     <!-- Passage au mois suivant -->
+    
     <form method="post" action="{% url 'jeu:rearing_dashboard' rearing_name=rearing.rearing_name %}" class="action-form" style="background-image: url('{% static "jeu/images/bois3.jpg" %}');">
         {% csrf_token %}
+        <h2>Actuellement au mois: {{ rearing.game.current_turn }}</h2>
         <input type="hidden" name="form_type" value="next_turn">
         <h2>Actions pour le prochain mois</h2>
         <button type="submit" class="btn btn-next-turn">Passer au mois suivant</button>
@@ -79,7 +94,7 @@
                 <h3>Cage #{{ forloop.counter }}</h3>
                 <button type="button" onclick="toggleLapins({{ forloop.counter }})" class="btn" style="margin-top: 10px;">Voir les lapins</button>
                 <div class="cage-lapins" id="lapins-{{ forloop.counter }}">
-                    {% with rabbits=cage.rabbit_set.all %}
+                    {% with rabbits=cage.rabbits.all %}
                         {% if rabbits %}
                             <ul>
                                 {% for rabbit in rabbits %}

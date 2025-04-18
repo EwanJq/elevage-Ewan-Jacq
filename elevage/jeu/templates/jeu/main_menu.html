@@ -6,7 +6,7 @@
     <title>Menu Principal</title>
     <link rel="stylesheet" href="{% static 'css/global.css' %}">
 </head>
-<body>
+<body style="background-image: url('{% static background_image %}'); background-size: cover; background-repeat: no-repeat; background-attachment: fixed;">
     <div class="menu-container">
         <div class="menu-title">Menu Principal</div>
         <a class="menu-link" href="{% url 'jeu:game_setup' %}">Configurer un nouveau jeu</a>

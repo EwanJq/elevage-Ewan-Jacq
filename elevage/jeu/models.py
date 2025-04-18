@@ -10,6 +10,14 @@ class Rearing(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)        # Sers à compter le nombre de tour ( Rajouter des attributs de jeu si multijoueur)   
     current_money = models.FloatField(default=0)
     current_food = models.FloatField(default=0)
+    
+    @property
+    def total_rabbits(self):
+        return Rabbit.objects.filter(cage__rearing=self).count()
+
+    @property
+    def total_cages(self):
+        return self.cages.count()
 
 class Cage(models.Model):
     cost = models.FloatField(default=100.0)                         # cout par défaut de la cage
@@ -31,7 +39,7 @@ class Rabbit(models.Model):
     )
     
     age = models.IntegerField(default=0)                            # en mois
-    cage = models.ForeignKey('Cage', on_delete=models.CASCADE)
+    cage = models.ForeignKey(Cage, on_delete=models.CASCADE, related_name= 'rabbits')
     hunger = models.IntegerField(default=0)                         # 0-100 scale
     infection = models.IntegerField(default=0)                      # 0-100 scale
     is_pregnant = models.BooleanField(default=False)

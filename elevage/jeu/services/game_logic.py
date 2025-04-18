@@ -95,15 +95,15 @@ def process_turn(request, rearing_name):
     
     
     for cage in rearing.cages.all():
-        rabbit_count = cage.rabbit_set.exclude(type='baby').count()
+        rabbit_count = cage.rabbits.all().exclude(type='baby').count()
     
         if rabbit_count <= 6:
-            for rabbit in cage.rabbit_set.all():
+            for rabbit in cage.rabbits.all().all():
                 rabbit.infection = max(0, rabbit.infection - 15)
                 rabbit.save()
 
         if rabbit_count > 6:
-            infected_rabbits = cage.rabbit_set.order_by('?')[:max(1, rabbit_count - 6)]
+            infected_rabbits = cage.rabbits.all().order_by('?')[:max(1, rabbit_count - 6)]
             for rabbit in infected_rabbits:
                 rabbit.infection = min(100, rabbit.infection + 40)
                 rabbit.save()
@@ -114,7 +114,7 @@ def process_turn(request, rearing_name):
         if excess > 0:
             survie = 0.5
             n_to_kill = max(1, round(excess * survie))
-            victims = cage.rabbit_set.order_by('?')[:n_to_kill]
+            victims = cage.rabbits.all().order_by('?')[:n_to_kill]
             victims.delete()
             print(f"{n_to_kill} lapins morts de surpopulation dans la cage {cage.id}")
         
@@ -170,6 +170,9 @@ def buy_item(rearing_name, item_type, quantity):
     rearing = Rearing.objects.get(rearing_name=rearing_name)
     unit_price = PRICES_BUY[item_type]
     total_cost = unit_price * quantity
+    
+    if rearing.current_money < total_cost:
+        return False 
 
     if item_type == 'food':
         rearing.current_food += quantity
@@ -184,44 +187,37 @@ def buy_item(rearing_name, item_type, quantity):
         rearing.save()
         
     elif item_type in ['baby', 'young', 'male', 'female']:
-        
         counter = quantity
-        
+
+        # Recherche des cages existantes et trie par le nombre de lapins (les moins pleines d'abord)
         available_cages = rearing.cages.annotate(
-            rabbit_count=models.Count('rabbit')
-        ).filter(rabbit_count__lt=10).order_by('rabbit_count') 
-        
-        if available_cages == 0 :
+            rabbit_count=models.Count('rabbits')
+        ).order_by('rabbit_count')  # Trier les cages par nombre de lapins (les moins pleines en premier)
+
+        if not available_cages:
             raise ValueError("Vous devez acheter une cage avant d’acheter des lapins.")
-        
+
+        # Ajout des lapins dans les cages disponibles
         for cage in available_cages:
-            if cage.rabbit_set.count() <= 10 and  counter > 0:
-
-                Rabbit.objects.create(
-                    type=item_type,
-                    age={'baby': 0, 'young': 1, 'male': 3, 'female': 3}[item_type],
-                    cage=cage,
-                    hunger=0,
-                    infection=0
+            if counter > 0:
+                # Si la cage a de la place, on ajoute un lapin
+                while counter > 0:
+                    Rabbit.objects.create(
+                        type=item_type,
+                        age={'baby': 0, 'young': 1, 'male': 3, 'female': 3}[item_type],
+                        cage=cage,  # Associer le lapin à la cage actuelle
+                        hunger=0,
+                        infection=0
                     )
-                counter -= 1
-            else :
-                None
+                    counter -= 1
 
-        while counter > 0 :
-            Rabbit.objects.create(
-                type=item_type,
-                age={'baby': 0, 'young': 1, 'male': 3, 'female': 3}[item_type],
-                cage=rearing.cages.first(),
-                hunger=0,
-                infection=0
-                )
-            counter -= 1
+                # Si tous les lapins sont attribués, sortir de la boucle
+                if counter == 0:
+                    break
+
+    rearing.current_money -= total_cost
+    rearing.save()
                 
-        rearing.current_money -= total_cost
-        rearing.save()
-                
-# A l'instar de buy_items qui marche très bien
 def sell_item(rearing_name, item_type, quantity):
     rearing = Rearing.objects.get(rearing_name=rearing_name)
     unit_price = PRICES_SELL[item_type]
@@ -229,37 +225,41 @@ def sell_item(rearing_name, item_type, quantity):
 
     if item_type == 'food':
         if rearing.current_food < quantity:
-            raise ValueError("Pas assez de nourriture à vendre.")
+            return False  # Pas assez de nourriture
         rearing.current_food -= quantity
         rearing.current_money += total_gain
         rearing.save()
+        return True
 
     elif item_type == 'cage':
-        # On récupère uniquement les cages vides
         empty_cages = rearing.cages.annotate(
-            rabbit_count=models.Count('rabbit')
-        ).filter(rabbit_count=0)[:quantity]
+            rabbit_count=models.Count('rabbits')
+        ).filter(rabbit_count=0)
 
         if empty_cages.count() < quantity:
-            raise ValueError("Impossible de vendre une cage contenant des lapins.")
+            return False  # Pas assez de cages vides
 
-        for cage in empty_cages:
+        for cage in empty_cages[:quantity]:
             cage.delete()
 
         rearing.current_money += total_gain
         rearing.save()
+        return True
 
     elif item_type in ['male', 'female']:
-        rabbits = list(Rabbit.objects.filter(cage__rearing=rearing, type=item_type).order_by('age')[:quantity])
+        total_available = Rabbit.objects.filter(cage__rearing=rearing, type=item_type).count()
         
-        if len(rabbits) < quantity:
-            raise ValueError(f"Pas assez de lapins de type {item_type} à vendre.")
+        if total_available < quantity:
+            return False  # Pas assez de lapins de ce type
         
-        for rabbit in rabbits:
+        rabbits_to_sell = Rabbit.objects.filter(cage__rearing=rearing, type=item_type).order_by('age')[:quantity]
+
+        for rabbit in rabbits_to_sell:
             rabbit.delete()
-        
+
         rearing.current_money += total_gain
         rearing.save()
+        return True
             
 
         

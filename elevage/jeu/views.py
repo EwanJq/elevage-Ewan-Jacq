@@ -32,7 +32,7 @@ def rearing_dashboard(request, rearing_name):
     # Récuperation de l'elevage
     rearing = get_object_or_404(Rearing, rearing_name=rearing_name) 
     #Affichage du fond d'ecran selon le mois
-    month = (rearing.game.current_turn - 1) % 12
+    month = (rearing.game.current_turn) % 12
     if month in [1, 2, 3]:
         background = 'printemps.png'
     elif month in [4, 5, 6]:
@@ -100,7 +100,6 @@ def all_rearings(request):
 def main_menu(request):
     background_image = 'jeu/images/lapin2.png' if random.random() < 0.05 else 'jeu/images/lapin1.png'
     return render(request, 'jeu/main_menu.html', {'background_image': background_image})
-
 
 
 
