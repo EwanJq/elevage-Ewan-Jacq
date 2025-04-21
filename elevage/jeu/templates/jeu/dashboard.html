@@ -22,8 +22,8 @@
     <div class="resources">
         <div><strong>Argent:</strong> {{ rearing.current_money }} €</div>
         <div><strong>Nourriture:</strong> {{ rearing.current_food }} kg</div>
-        <div><strong>Total de lapins:</strong> {{ rearing.total_rabbits }}</div>
-        <div><strong>Nombre de cages:</strong> {{ rearing.total_cages }}</div>
+        <div><strong>Total de lapins:</strong> {{ total_rabbits }}</div>
+        <div><strong>Nombre de cages:</strong> {{ total_cages }}</div>
     </div>
     <div style="display: flex; justify-content: center; margin-top: 30px;">
         <a href="{% url 'jeu:main_menu' %}" class="btn" style="

@@ -4,6 +4,33 @@ import random
 from django.db import models
 
 
+def initialisation(rearing, setup_data):
+    if rearing.game.current_turn != 1:
+        return
+
+    # Création des cages
+    cages = [Cage.objects.create(rearing=rearing) for _ in range(setup_data.initial_cages)]
+
+    # Création des lapins
+    lapins = [
+        *[Rabbit(type='baby', age=0, rearing=rearing) for _ in range(setup_data.initial_baby_rabbits)],
+        *[Rabbit(type='young', age=1, rearing=rearing) for _ in range(setup_data.initial_young_rabbits)],
+        *[Rabbit(type='male', age=3, rearing=rearing) for _ in range(setup_data.initial_male_rabbits)],
+        *[Rabbit(type='female', age=3, rearing=rearing) for _ in range(setup_data.initial_female_rabbits)],
+    ]
+    Rabbit.objects.bulk_create(lapins)
+
+    # Réattribution des objets avec ID (nécessaire après bulk_create)
+    lapins = list(Rabbit.objects.filter(rearing=rearing, cage__isnull=True))
+
+    # Répartition équitable des lapins dans les cages
+    if cages:
+        for index, rabbit in enumerate(lapins):
+            rabbit.cage = cages[index % len(cages)]
+        Rabbit.objects.bulk_update(lapins, ['cage'])
+
+                
+                
 def process_turn(request, rearing_name):
     
     
@@ -12,26 +39,6 @@ def process_turn(request, rearing_name):
         rearing = Rearing.objects.get(rearing_name=rearing_name)
     except Rearing.DoesNotExist:
         return False, "Élevage non trouvé"
-    
-    
-    # Initialisation du jeu
-    
-    
-    if rearing.game.current_turn == 1:
-    # On récupère les lapins sans cage lors du premier tour
-        rabbits_without_cage = Rabbit.objects.filter(cage__isnull=True, cage__rearing=rearing)
-        cages = list(rearing.cages.all())
-
-        cage_index = 0
-        attribution = int(len(rabbits_without_cage) / len(cages))
-
-        for rabbit in rabbits_without_cage:
-            rabbit.cage = cages[cage_index]
-            rabbit.save()
-
-            if cages[cage_index].rabbits.count() >= attribution and cage_index < len(cages) - 1:
-                # On utilisera toujours .count() pour comparer avec des entiers car les autres sont des QuerySet
-                cage_index += 1
     
     
     # 0 -- Gestion des ages des lapins
@@ -227,7 +234,8 @@ def buy_item(rearing_name, item_type, quantity):
                         age={'baby': 0, 'young': 1, 'male': 3, 'female': 3}[item_type],
                         cage=cage,  # Associer le lapin à la cage actuelle
                         hunger=0,
-                        infection=0
+                        infection=0,
+                        rearing=rearing
                     )
                     counter -= 1
 

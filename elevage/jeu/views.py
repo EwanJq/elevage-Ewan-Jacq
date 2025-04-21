@@ -1,36 +1,55 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import *
 from .models import *
-from jeu.services.game_logic import buy_item, process_turn, sell_item
+from jeu.services.game_logic import buy_item, process_turn, sell_item, initialisation
+
 
 # 0 -- Vue de Setup : lors de la creation de son premier élevage
 
+
 def game_setup(request):
     if request.method == 'GET':
-        form = GameSetupForm()                  #envoie les infos de la base de donnée à l'utilisateur
-    elif request.method == 'POST':              #recupere les infos données par l'utilisateur
+        form = GameSetupForm()
+
+    elif request.method == 'POST':
         form = GameSetupForm(request.POST)
         if form.is_valid():
-            form.save()  # Sauvegarde les données dans la base de données
+            setup_data = form.save()
+
+            # Création de la partie
             game = Game.objects.create(current_turn=1)
-            
-            # Création de l'élevage avec les données du formulaire (On applique les données initiales à celui d'un elevage)
+
+            # Création de l’élevage
             rearing = Rearing.objects.create(
-                rearing_name=form.cleaned_data['rearing_name'],
+                rearing_name=setup_data.rearing_name,
                 game=game,
-                current_money=form.cleaned_data['initial_money'],
-                current_food=form.cleaned_data['initial_food']
+                current_money=setup_data.initial_money,
+                current_food=setup_data.initial_food
             )
-            
-            return redirect('jeu:rearing_dashboard', rearing_name=rearing.rearing_name) # Redirige vers la page du jeu une fois l'initialisation terminée
+
+            # Appel à la fonction qui se charge du setup complet (cages, lapins, répartition)
+            initialisation(rearing, setup_data)
+
+            # Nettoyage
+            setup_data.delete()
+
+            return redirect('jeu:rearing_dashboard', rearing_name=rearing.rearing_name)
 
     return render(request, 'jeu/setup.html', {'form': form})
 
+
 # 1 -- Vue principale du jeu
 
+    
 def rearing_dashboard(request, rearing_name):
-    # Récuperation de l'elevage
+    # Récuperation de l'elevage et de ses données 
     rearing = get_object_or_404(Rearing, rearing_name=rearing_name) 
+    rabbits = Rabbit.objects.filter(cage__rearing=rearing)
+    cages = Cage.objects.filter(rearing=rearing)
+    
+    # Calculer le nombre total de lapins et de cages
+    total_rabbits = rabbits.count()
+    total_cages = cages.count()
     #Affichage du fond d'ecran selon le mois
     month = (rearing.game.current_turn) % 12
     if month in [1, 2, 3]:
@@ -50,6 +69,9 @@ def rearing_dashboard(request, rearing_name):
         # Envoie les formulaires vides à l'utilisateur
         return render(request, 'jeu/dashboard.html', {
             'rearing': rearing,
+            'rabbits': rabbits,
+            'total_rabbits': total_rabbits,
+            'total_cages': total_cages,
             'buy_form': buy_form,
             'sell_form': sell_form,
             'background_image': f"jeu/images/{background}"
@@ -79,7 +101,9 @@ def rearing_dashboard(request, rearing_name):
         # Redirection après traitement POST pour éviter une double soumission
         return redirect('jeu:rearing_dashboard', rearing_name=rearing_name)
     
+    
 # 2 -- Vue de tous les élevages
+    
     
 def all_rearings(request):
     # Récupère tous les élevages
@@ -95,7 +119,9 @@ def all_rearings(request):
         'search_term': search_term
     })
     
+    
 # 3 -- Menu du jeu
+
 
 def main_menu(request):
     background_image = 'jeu/images/lapin2.png' if random.random() < 0.05 else 'jeu/images/lapin1.png'

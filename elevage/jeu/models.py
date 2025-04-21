@@ -25,6 +25,9 @@ class Cage(models.Model):
         
 class Rabbit(models.Model):
     
+    rearing = models.ForeignKey(Rearing, on_delete=models.CASCADE, related_name='rabbits')
+    # Sers juste à l'initialisation ! IL ne faut pas que le lapin puisse etre dans une cage qui n'est pas dans son rearing
+    
     RABBIT_TYPE_CHOICES = [     # On est obligé d'utiliser des tuples : pour ce qui est utilisé en base de donnée et ce qui est affiché à l'utilisateur
         ('baby', 'Lapereau'),
         ('young', 'Jeune'),
@@ -39,7 +42,8 @@ class Rabbit(models.Model):
     )
     
     age = models.IntegerField(default=0)                            # en mois
-    cage = models.ForeignKey(Cage, on_delete=models.CASCADE, related_name= 'rabbits')
+    cage = models.ForeignKey(Cage, null=True, blank=True, on_delete=models.SET_NULL, related_name= 'rabbits')
+    #Permet à la cage de ne pas etre obligatoire et rend l'initialisation possible
     hunger = models.IntegerField(default=0)                         # 0-100 scale
     infection = models.IntegerField(default=0)                      # 0-100 scale
     is_pregnant = models.BooleanField(default=False)

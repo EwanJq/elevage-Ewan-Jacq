@@ -11,7 +11,8 @@ class GameSetupForm(forms.ModelForm):
             'initial_male_rabbits', 
             'initial_female_rabbits', 
             'initial_food', 
-            'initial_money'
+            'initial_money',
+            'initial_cages'
         ]
         
         labels = {      #On change les noms anglais pour donner une interface plus comprehensible à l'utilisateur
@@ -22,6 +23,7 @@ class GameSetupForm(forms.ModelForm):
         'initial_female_rabbits': "Nombre de femelles",
         'initial_food': "Quantité de nourriture (g)",
         'initial_money': "Argent initial (€)",
+        'initial_cages': "Nombre de cages de départ"
     }
 
         widgets = {     #Boutons réellements utiles à l'utilisateur
@@ -32,6 +34,7 @@ class GameSetupForm(forms.ModelForm):
             'initial_female_rabbits': forms.NumberInput(attrs={'class': 'form-control'}),
             'initial_food': forms.NumberInput(attrs={'class': 'form-control'}),
             'initial_money': forms.NumberInput(attrs={'class': 'form-control'}),
+            'initial_cages': forms.NumberInput(attrs={'class': 'form-control'}),
         }
         
     # Permet d'empecher l'envoi du form s'il n'est pas valide
