@@ -5,34 +5,31 @@ from django.db import models
 
 
 def initialisation(rearing, setup_data):
-    if rearing.game.current_turn != 1:
-        return
-
-    # Création des cages
+    
     cages = [Cage.objects.create(rearing=rearing) for _ in range(setup_data.initial_cages)]
-
-    # Création des lapins
     lapins = [
+        # [*[] permet de concatener plusieurs listes en une seule ]
         *[Rabbit(type='baby', age=0, rearing=rearing) for _ in range(setup_data.initial_baby_rabbits)],
         *[Rabbit(type='young', age=1, rearing=rearing) for _ in range(setup_data.initial_young_rabbits)],
         *[Rabbit(type='male', age=3, rearing=rearing) for _ in range(setup_data.initial_male_rabbits)],
         *[Rabbit(type='female', age=3, rearing=rearing) for _ in range(setup_data.initial_female_rabbits)],
     ]
+    
     Rabbit.objects.bulk_create(lapins)
+    # bulk_create() permet de creer des objets en masse depuis une liste de ce meme objet (elle le save apres)
 
-    # Réattribution des objets avec ID (nécessaire après bulk_create)
+    # Repartition equitable
     lapins = list(Rabbit.objects.filter(rearing=rearing, cage__isnull=True))
-
-    # Répartition équitable des lapins dans les cages
     if cages:
         for index, rabbit in enumerate(lapins):
             rabbit.cage = cages[index % len(cages)]
+            # attribution circulaire grace à une division euclidienne
         Rabbit.objects.bulk_update(lapins, ['cage'])
+        # bulk_update() permet d'ajouter des nouveaux attributs à l'instar de bulk_create()
 
                 
                 
 def process_turn(request, rearing_name):
-    
     
     # Récuperation de l'elevage, vieillissement et application des règles de vie et de mort dans l'elevage
     try:
@@ -63,7 +60,8 @@ def process_turn(request, rearing_name):
             Rabbit.objects.create(
                 type='baby',
                 age=0,
-                cage=mother.cage
+                cage=mother.cage,
+                rearing = rearing
             )
         mother.is_pregnant = False
         mother.save()
