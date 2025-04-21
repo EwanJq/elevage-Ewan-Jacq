@@ -68,6 +68,7 @@ class GameSetup(models.Model):
     initial_baby_rabbits = models.IntegerField(default=0)
     initial_food = models.FloatField(default=0)
     initial_money = models.FloatField(default=0)
+    initial_cages = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name

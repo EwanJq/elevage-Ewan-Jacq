@@ -14,6 +14,26 @@ def process_turn(request, rearing_name):
         return False, "Élevage non trouvé"
     
     
+    # Initialisation du jeu
+    
+    
+    if rearing.game.current_turn == 1:
+    # On récupère les lapins sans cage lors du premier tour
+        rabbits_without_cage = Rabbit.objects.filter(cage__isnull=True, cage__rearing=rearing)
+        cages = list(rearing.cages.all())
+
+        cage_index = 0
+        attribution = int(len(rabbits_without_cage) / len(cages))
+
+        for rabbit in rabbits_without_cage:
+            rabbit.cage = cages[cage_index]
+            rabbit.save()
+
+            if cages[cage_index].rabbits.count() >= attribution and cage_index < len(cages) - 1:
+                # On utilisera toujours .count() pour comparer avec des entiers car les autres sont des QuerySet
+                cage_index += 1
+    
+    
     # 0 -- Gestion des ages des lapins
     
     

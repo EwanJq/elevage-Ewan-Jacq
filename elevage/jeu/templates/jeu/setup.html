@@ -71,6 +71,14 @@
         title="Argent disponible pour les premiers achats.">Argent (€)</label>
         {{ form.initial_money }}
       </div>
+      
+      <div class="mb-3">
+        <label for="id_initial_cages" class="form-label" data-bs-toggle="tooltip" data-bs-placement="top"
+        title="Chaque cage peut contenir jusqu'à 10 lapins. Achetez-en suffisamment pour ne pas surpeupler !">
+          Cages achetées
+        </label>
+        {{ form.initial_cages }}
+      </div>
 
       <!-- Configuration du bouton de marche -->
       <div class="container mt-5 d-flex justify-content-center">
